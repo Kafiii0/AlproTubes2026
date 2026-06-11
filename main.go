@@ -290,7 +290,8 @@ func cariBerdasarkanDeadline(T TabTugas, n int, tgl, bln, thn int) int {
 	return foundIdx
 }
 
-func main() {
+
+func menuUtama() {
 	var pilihan int = 0
 	for pilihan != 7 {
 		fmt.Println("\n=====================================")
@@ -381,4 +382,9 @@ func main() {
 			fmt.Println("Error: Pilihan tidak valid, mohon masukkan angka 1-7.")
 		}
 	}
+}
+
+
+func main() {
+	menuUtama()
 }
