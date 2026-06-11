@@ -1,12 +1,6 @@
 package main
 
-import (
-	"bufio"
-	"fmt"
-	"os"
-	"strconv"
-	"strings"
-)
+import "fmt"
 
 const NMAX int = 1000
 
@@ -27,39 +21,6 @@ type TabTugas [NMAX]Tugas
 
 var daftarTugas TabTugas
 var nTugas int = 0
-var reader = bufio.NewReader(os.Stdin)
-
-func inputStringWajib(prompt string) string {
-	for {
-		fmt.Print(prompt)
-		input, _ := reader.ReadString('\n')
-		input = strings.TrimSpace(input)
-		
-		if input != "" {
-			return input
-		}
-		fmt.Println("[!] Error: Input tidak boleh kosong! Silakan coba lagi.")
-	}
-}
-
-func inputIntWajib(prompt string) int {
-	for {
-		fmt.Print(prompt)
-		input, _ := reader.ReadString('\n')
-		input = strings.TrimSpace(input)
-		
-		if input == "" {
-			fmt.Println("[!] Error: Input tidak boleh kosong! Harus berupa angka.")
-			continue
-		}
-
-		val, err := strconv.Atoi(input)
-		if err == nil {
-			return val 
-		}
-		fmt.Println("[!] Error: Input tidak valid! Harap masukkan huruf/karakter berupa angka.")
-	}
-}
 
 func hitungTugasBelumSelesaiRekursif(T TabTugas, n int) int {
 	if n == 0 {
@@ -91,44 +52,38 @@ func isTanggalValid(tgl, bln, thn int) bool {
 
 func tambahTugas(T *TabTugas, n *int) {
 	if *n >= NMAX {
-		fmt.Println("[!] Gagal: Kapasitas penyimpanan tugas penuh!")
+		fmt.Println("Gagal: Kapasitas penyimpanan tugas penuh!")
 		return
 	}
+	
 	var t Tugas
-	t.judul = inputStringWajib("Masukkan Judul Tugas: ")
-	t.kategori = inputStringWajib("Masukkan Kategori Tugas: ")
+	fmt.Print("Masukkan Judul Tugas (Gunakan_Underscore_Untuk_Spasi): ")
+	fmt.Scan(&t.judul)
+	fmt.Print("Masukkan Kategori Tugas: ")
+	fmt.Scan(&t.kategori)
 
 	var tgl, bln, thn int
-	valid := false
+	var valid bool = false
 
 	for !valid {
-		inputDL := inputStringWajib("Masukkan Deadline (Tgl Bln Thn, contoh: 30 5 2026): ")
-		parts := strings.Split(inputDL, " ")
+		fmt.Print("Masukkan Deadline (Tgl Bln Thn dipisah spasi, cth: 30 5 2026): ")
+		fmt.Scan(&tgl, &bln, &thn)
 		
-		if len(parts) == 3 {
-			var errTgl, errBln, errThn error
-			tgl, errTgl = strconv.Atoi(parts[0])
-			bln, errBln = strconv.Atoi(parts[1])
-			thn, errThn = strconv.Atoi(parts[2])
-			
-			if errTgl != nil || errBln != nil || errThn != nil {
-				fmt.Println("[!] Error: Format harus berupa angka! (contoh: 30 5 2026)")
-			} else if isTanggalValid(tgl, bln, thn) {
-				valid = true
-			} else {
-				fmt.Println("[!] Error: Tanggal tidak masuk akal dalam kalender! Silakan masukkan ulang.")
-			}
+		if isTanggalValid(tgl, bln, thn) {
+			valid = true
 		} else {
-			fmt.Println("[!] Error: Format salah! Gunakan spasi untuk memisahkan tanggal, bulan, dan tahun.")
+			fmt.Println("Error: Tanggal tidak valid! Silakan masukkan ulang.")
 		}
 	}
 
-	t.deadline = Waktu{tgl: tgl, bln: bln, thn: thn}
+	t.deadline.tgl = tgl
+	t.deadline.bln = bln
+	t.deadline.thn = thn
 	t.isSelesai = false
 
 	T[*n] = t
 	*n = *n + 1
-	fmt.Println("-> Tugas berhasil ditambahkan!")
+	fmt.Println("Tugas berhasil ditambahkan!")
 }
 
 func tampilSemuaTugas(T TabTugas, n int) {
@@ -136,18 +91,20 @@ func tampilSemuaTugas(T TabTugas, n int) {
 		fmt.Println("Belum ada data tugas yang tercatat.")
 		return
 	}
-	fmt.Println("\n=========================================================================")
+	fmt.Println("------------------------------------------------------------------")
 	fmt.Println("No | Judul Tugas          | Kategori     | Deadline     | Status")
-	fmt.Println("=========================================================================")
-	for i := 0; i < n; i++ {
+	fmt.Println("------------------------------------------------------------------")
+	
+	var i int
+	for i = 0; i < n; i++ {
 		var statusStr string = "Belum Selesai"
 		if T[i].isSelesai {
 			statusStr = "Selesai"
 		}
-		fmt.Println(i+1, " |", T[i].judul, "|", T[i].kategori, "|", T[i].deadline.tgl, "-", T[i].deadline.bln, "-", T[i].deadline.thn, "|", statusStr)
+		fmt.Printf("%d  | %s | %s | %d-%d-%d | %s\n", i+1, T[i].judul, T[i].kategori, T[i].deadline.tgl, T[i].deadline.bln, T[i].deadline.thn, statusStr)
 	}
-	fmt.Println("=========================================================================")
-	fmt.Println("Total Tugas Belum Selesai (Hitungan Rekursif):", hitungTugasBelumSelesaiRekursif(T, n))
+	fmt.Println("------------------------------------------------------------------")
+	fmt.Println("Total Tugas Belum Selesai (Rekursif):", hitungTugasBelumSelesaiRekursif(T, n))
 }
 
 func editTugas(T *TabTugas, n int) {
@@ -155,28 +112,36 @@ func editTugas(T *TabTugas, n int) {
 		fmt.Println("Tidak ada data tugas untuk diedit.")
 		return
 	}
-	idx := inputIntWajib("Masukkan nomor urut tugas yang ingin diedit: ")
+	
+	var idx int
+	fmt.Print("Masukkan nomor urut tugas yang ingin diedit: ")
+	fmt.Scan(&idx)
 
 	if idx <= 0 || idx > n {
-		fmt.Println("[!] Error: Nomor urut tidak ditemukan dalam daftar!")
+		fmt.Println("Error: Nomor urut tidak ditemukan dalam daftar!")
 		return
 	}
 	idx = idx - 1 
 
-	fmt.Println("\nAtribut apa yang ingin diubah?")
+	fmt.Println("Atribut apa yang ingin diubah?")
 	fmt.Println("1. Tandai Selesai / Belum Selesai")
 	fmt.Println("2. Ubah Judul & Kategori")
-	pil := inputIntWajib("Pilihan (1-2): ")
+	
+	var pil int
+	fmt.Print("Pilihan (1-2): ")
+	fmt.Scan(&pil)
 
 	if pil == 1 {
 		T[idx].isSelesai = !T[idx].isSelesai
-		fmt.Println("-> Status penyelesaian tugas berhasil diperbarui!")
+		fmt.Println("Status penyelesaian tugas berhasil diperbarui!")
 	} else if pil == 2 {
-		T[idx].judul = inputStringWajib("Masukkan Judul Baru: ")
-		T[idx].kategori = inputStringWajib("Masukkan Kategori Baru: ")
-		fmt.Println("-> Data tugas berhasil diubah!")
+		fmt.Print("Masukkan Judul Baru: ")
+		fmt.Scan(&T[idx].judul)
+		fmt.Print("Masukkan Kategori Baru: ")
+		fmt.Scan(&T[idx].kategori)
+		fmt.Println("Data tugas berhasil diubah!")
 	} else {
-		fmt.Println("[!] Error: Pilihan sub-menu tidak valid.")
+		fmt.Println("Error: Pilihan sub-menu tidak valid.")
 	}
 }
 
@@ -185,19 +150,23 @@ func hapusTugas(T *TabTugas, n *int) {
 		fmt.Println("Tidak ada data tugas untuk dihapus.")
 		return
 	}
-	idx := inputIntWajib("Masukkan nomor urut tugas yang ingin dihapus: ")
+	
+	var idx int
+	fmt.Print("Masukkan nomor urut tugas yang ingin dihapus: ")
+	fmt.Scan(&idx)
 
 	if idx <= 0 || idx > *n {
-		fmt.Println("[!] Error: Nomor urut tidak ditemukan dalam daftar!")
+		fmt.Println("Error: Nomor urut tidak ditemukan dalam daftar!")
 		return
 	}
 	idx = idx - 1
 
-	for i := idx; i < *n-1; i++ {
+	var i int
+	for i = idx; i < *n-1; i++ {
 		T[i] = T[i+1]
 	}
 	*n = *n - 1
-	fmt.Println("-> Tugas berhasil dihapus secara permanen!")
+	fmt.Println("Tugas berhasil dihapus secara permanen!")
 }
 
 func isDeadlineLebihKecil(w1, w2 Waktu) bool {
@@ -211,10 +180,15 @@ func isDeadlineLebihKecil(w1, w2 Waktu) bool {
 }
 
 func urutBerdasarkanDeadline(T *TabTugas, n int, ascending bool) {
-	for i := 1; i < n; i++ {
-		key := T[i]
-		j := i - 1
-		var kondisi bool = false
+	var i, j int
+	var key Tugas
+	var kondisi bool
+
+	for i = 1; i < n; i++ {
+		key = T[i]
+		j = i - 1
+		kondisi = false
+		
 		if j >= 0 {
 			if ascending {
 				kondisi = isDeadlineLebihKecil(key.deadline, T[j].deadline)
@@ -222,6 +196,7 @@ func urutBerdasarkanDeadline(T *TabTugas, n int, ascending bool) {
 				kondisi = isDeadlineLebihKecil(T[j].deadline, key.deadline)
 			}
 		}
+		
 		for j >= 0 && kondisi {
 			T[j+1] = T[j]
 			j = j - 1
@@ -235,14 +210,20 @@ func urutBerdasarkanDeadline(T *TabTugas, n int, ascending bool) {
 		}
 		T[j+1] = key
 	}
-	fmt.Println("-> Proses pengurutan dengan Insertion Sort selesai.")
+	fmt.Println("Proses pengurutan dengan Insertion Sort selesai.")
 }
 
 func urutBerdasarkanStatus(T *TabTugas, n int, ascending bool) {
-	for i := 0; i < n-1; i++ {
-		idxEkstrem := i
-		for j := i + 1; j < n; j++ {
-			var valJ, valEkstrem int = 0, 0
+	var i, j, idxEkstrem int
+	var valJ, valEkstrem int
+	var temp Tugas
+
+	for i = 0; i < n-1; i++ {
+		idxEkstrem = i
+		for j = i + 1; j < n; j++ {
+			valJ = 0
+			valEkstrem = 0
+			
 			if T[j].isSelesai {
 				valJ = 1
 			}
@@ -256,26 +237,29 @@ func urutBerdasarkanStatus(T *TabTugas, n int, ascending bool) {
 				idxEkstrem = j
 			}
 		}
-		temp := T[i]
+		temp = T[i]
 		T[i] = T[idxEkstrem]
 		T[idxEkstrem] = temp
 	}
-	fmt.Println("-> Proses pengurutan dengan Selection Sort selesai.")
+	fmt.Println("Proses pengurutan dengan Selection Sort selesai.")
 }
 
 func cariBerdasarkanKategori(T TabTugas, n int, keyword string) {
 	var found bool = false
-	fmt.Println("\nHasil Pencarian Kategori [", keyword, "]:")
-	for i := 0; i < n; i++ {
-		if strings.EqualFold(T[i].kategori, keyword) {
+	fmt.Printf("\nHasil Pencarian Kategori [%s]:\n", keyword)
+	
+	var i int
+	for i = 0; i < n; i++ {
+		if T[i].kategori == keyword {
 			found = true
 			var statusStr string = "Belum Selesai"
 			if T[i].isSelesai {
 				statusStr = "Selesai"
 			}
-			fmt.Println("-", T[i].judul, "(DL:", T[i].deadline.tgl, "-", T[i].deadline.bln, "-", T[i].deadline.thn, ") [", statusStr, "]")
+			fmt.Printf("- %s (DL: %d-%d-%d) [%s]\n", T[i].judul, T[i].deadline.tgl, T[i].deadline.bln, T[i].deadline.thn, statusStr)
 		}
 	}
+	
 	if !found {
 		fmt.Println("Tidak ada tugas yang cocok dengan kategori tersebut.")
 	}
@@ -286,10 +270,14 @@ func cariBerdasarkanDeadline(T TabTugas, n int, tgl, bln, thn int) int {
 	var right int = n - 1
 	var foundIdx int = -1
 	var found bool = false
-	target := Waktu{tgl: tgl, bln: bln, thn: thn}
+	
+	var target Waktu
+	target.tgl = tgl
+	target.bln = bln
+	target.thn = thn
 
 	for left <= right && !found {
-		mid := (left + right) / 2
+		var mid int = (left + right) / 2
 		if T[mid].deadline.tgl == target.tgl && T[mid].deadline.bln == target.bln && T[mid].deadline.thn == target.thn {
 			found = true
 			foundIdx = mid
@@ -317,12 +305,8 @@ func main() {
 		fmt.Println("7. Keluar Aplikasi")
 		fmt.Println("=====================================")
 		
-		pilihan = inputIntWajib("Pilih Menu (1-7): ")
-
-		if pilihan < 1 || pilihan > 7 {
-			fmt.Println("[!] Error: Pilihan tidak valid, mohon masukkan angka antara 1-7.")
-			continue
-		}
+		fmt.Print("Pilih Menu (1-7): ")
+		fmt.Scan(&pilihan)
 
 		if pilihan == 1 {
 			tambahTugas(&daftarTugas, &nTugas)
@@ -333,78 +317,68 @@ func main() {
 		} else if pilihan == 4 {
 			hapusTugas(&daftarTugas, &nTugas)
 		} else if pilihan == 5 {
+			var subPil int
 			fmt.Println("\n--- Sub-Menu Pencarian Data ---")
 			fmt.Println("1. Cari Berdasarkan Kategori (Sequential Search)")
 			fmt.Println("2. Cari Berdasarkan Tanggal Deadline (Binary Search)")
-			subPil := inputIntWajib("Pilihan: ")
+			fmt.Print("Pilihan: ")
+			fmt.Scan(&subPil)
 			
 			if subPil == 1 {
-				key := inputStringWajib("Masukkan Kategori yang dicari: ")
+				var key string
+				fmt.Print("Masukkan Kategori yang dicari: ")
+				fmt.Scan(&key)
 				cariBerdasarkanKategori(daftarTugas, nTugas, key)
 			} else if subPil == 2 {
-				fmt.Println("Catatan: Data akan otomatis diurutkan menaik sebelum eksekusi Binary Search.")
+				fmt.Println("Catatan: Data diurutkan menaik otomatis untuk Binary Search.")
 				urutBerdasarkanDeadline(&daftarTugas, nTugas, true)
 				
-				validSearchDL := false
-				for !validSearchDL {
-					inputDL := inputStringWajib("Masukkan tanggal deadline yang dicari (Tgl Bln Thn): ")
-					parts := strings.Split(inputDL, " ")
-					if len(parts) == 3 {
-						t, errT := strconv.Atoi(parts[0])
-						b, errB := strconv.Atoi(parts[1])
-						th, errTh := strconv.Atoi(parts[2])
-						
-						if errT != nil || errB != nil || errTh != nil {
-							fmt.Println("[!] Error: Format harus angka!")
-						} else {
-							validSearchDL = true
-							resIdx := cariBerdasarkanDeadline(daftarTugas, nTugas, t, b, th)
-							if resIdx != -1 {
-								fmt.Println("\n-> Data ditemukan pada urutan ke-", resIdx+1, ":", daftarTugas[resIdx].judul, "[Kategori:", daftarTugas[resIdx].kategori, "]")
-							} else {
-								fmt.Println("-> Data tugas dengan tanggal tersebut tidak ditemukan.")
-							}
-						}
-					} else {
-						fmt.Println("[!] Error: Format tanggal salah! Gunakan spasi.")
-					}
+				var t, b, th int
+				fmt.Print("Masukkan deadline yang dicari (Tgl Bln Thn spasi): ")
+				fmt.Scan(&t, &b, &th)
+				
+				var resIdx int = cariBerdasarkanDeadline(daftarTugas, nTugas, t, b, th)
+				if resIdx != -1 {
+					fmt.Printf("\nData ditemukan di indeks %d: %s [%s]\n", resIdx+1, daftarTugas[resIdx].judul, daftarTugas[resIdx].kategori)
+				} else {
+					fmt.Println("Data tugas dengan tanggal tersebut tidak ditemukan.")
 				}
 			} else {
-				fmt.Println("[!] Error: Pilihan sub-menu pencarian tidak valid.")
+				fmt.Println("Error: Pilihan sub-menu pencarian tidak valid.")
 			}
 		} else if pilihan == 6 {
+			var subPil int
 			fmt.Println("\n--- Sub-Menu Pengurutan Data ---")
-			fmt.Println("1. Urutkan Berdasarkan Tanggal Deadline (Insertion Sort)")
-			fmt.Println("2. Urutkan Berdasarkan Status Kerja (Selection Sort)")
-			subPil := inputIntWajib("Pilihan Kriteria: ")
+			fmt.Println("1. Urutkan Berdasar Tanggal Deadline (Insertion Sort)")
+			fmt.Println("2. Urutkan Berdasar Status Kerja (Selection Sort)")
+			fmt.Print("Pilihan Kriteria: ")
+			fmt.Scan(&subPil)
 			
-			if subPil != 1 && subPil != 2 {
-				fmt.Println("[!] Error: Pilihan kriteria tidak valid.")
-				continue
-			}
+			if subPil == 1 || subPil == 2 {
+				var mode int
+				fmt.Println("\nMode Pengurutan:\n1. Ascending (Menaik)\n2. Descending (Menurun)")
+				fmt.Print("Pilihan Mode: ")
+				fmt.Scan(&mode)
+				
+				var isAsc bool = true
+				if mode == 2 {
+					isAsc = false
+				}
 
-			fmt.Println("\nMode Pengurutan:\n1. Ascending (Menaik)\n2. Descending (Menurun)")
-			mode := inputIntWajib("Pilihan Mode: ")
-			
-			if mode != 1 && mode != 2 {
-				fmt.Println("[!] Error: Pilihan mode tidak valid.")
-				continue
-			}
-
-			isAsc := true
-			if mode == 2 {
-				isAsc = false
-			}
-
-			if subPil == 1 {
-				urutBerdasarkanDeadline(&daftarTugas, nTugas, isAsc)
-				tampilSemuaTugas(daftarTugas, nTugas)
-			} else if subPil == 2 {
-				urutBerdasarkanStatus(&daftarTugas, nTugas, isAsc)
-				tampilSemuaTugas(daftarTugas, nTugas)
+				if subPil == 1 {
+					urutBerdasarkanDeadline(&daftarTugas, nTugas, isAsc)
+					tampilSemuaTugas(daftarTugas, nTugas)
+				} else if subPil == 2 {
+					urutBerdasarkanStatus(&daftarTugas, nTugas, isAsc)
+					tampilSemuaTugas(daftarTugas, nTugas)
+				}
+			} else {
+				fmt.Println("Error: Pilihan kriteria tidak valid.")
 			}
 		} else if pilihan == 7 {
 			fmt.Println("Terima kasih telah menggunakan aplikasi! Selesai.")
+		} else {
+			fmt.Println("Error: Pilihan tidak valid, mohon masukkan angka 1-7.")
 		}
 	}
 }
