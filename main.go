@@ -2,7 +2,7 @@ package main
 
 import "fmt"
 
-const MAX int = 1000
+const NMAX int = 1000
 
 type Waktu struct {
 	hari  int
@@ -17,7 +17,7 @@ type DataTugas struct {
 	selesai  bool
 }
 
-type ArrTugas [MAX]DataTugas
+type ArrTugas [NMAX]DataTugas
 
 var daftarTugas ArrTugas
 var jumTugas int = 0
@@ -50,123 +50,123 @@ func cekTanggal(h, b, t int) bool {
 	return h <= batas
 }
 
-func tambahTugas(T *ArrTugas, n *int) {
-	if *n >= MAX {
-		fmt.Println("Gagal: Kapasitas penyimpanan tugas penuh.")
-		return
-	}
-	
-	var baru DataTugas
-	fmt.Print("Masukkan Judul Tugas (Gunakan_Underscore_Untuk_Spasi): ")
-	fmt.Scan(&baru.judul)
-	fmt.Print("Masukkan Kategori Tugas: ")
-	fmt.Scan(&baru.kategori)
-
-	var h, b, t int
-	var valid bool = false
-
-	for valid == false {
-		fmt.Print("Masukkan Deadline (Tgl Bln Thn dipisah spasi, cth: 30 5 2026): ")
-		fmt.Scan(&h, &b, &t)
-		
-		if cekTanggal(h, b, t) {
-			valid = true
-		} else {
-			fmt.Println("Error: Tanggal tidak valid. Silakan masukkan ulang.")
-		}
-	}
-
-	baru.deadline.hari = h
-	baru.deadline.bulan = b
-	baru.deadline.tahun = t
-	baru.selesai = false
-
-	T[*n] = baru
-	*n = *n + 1
-	fmt.Println("Tugas berhasil ditambahkan.")
-}
-
 func tampilTugas(T ArrTugas, n int) {
 	if n == 0 {
 		fmt.Println("Belum ada data tugas yang tercatat.")
-		return
-	}
-	fmt.Println("------------------------------------------------------------------")
-	fmt.Println("No | Judul Tugas          | Kategori     | Deadline     | Status")
-	fmt.Println("------------------------------------------------------------------")
-	
-	var i int
-	for i = 0; i < n; i++ {
-		var statusStr string = "Belum Selesai"
-		if T[i].selesai == true {
-			statusStr = "Selesai"
+	} else {
+		fmt.Println("------------------------------------------------------------------")
+		fmt.Println("No | Judul Tugas          | Kategori     | Deadline     | Status")
+		fmt.Println("------------------------------------------------------------------")
+		
+		var i int
+		for i = 0; i < n; i++ {
+			var statusStr string = "Belum Selesai"
+			if T[i].selesai == true {
+				statusStr = "Selesai"
+			}
+			fmt.Printf("%d  | %s | %s | %d-%d-%d | %s\n", i+1, T[i].judul, T[i].kategori, T[i].deadline.hari, T[i].deadline.bulan, T[i].deadline.tahun, statusStr)
 		}
-		fmt.Printf("%d  | %s | %s | %d-%d-%d | %s\n", i+1, T[i].judul, T[i].kategori, T[i].deadline.hari, T[i].deadline.bulan, T[i].deadline.tahun, statusStr)
+		fmt.Println("------------------------------------------------------------------")
+		fmt.Println("Total Tugas Belum Selesai (Rekursif):", hitungSisaTugas(T, n))
 	}
-	fmt.Println("------------------------------------------------------------------")
-	fmt.Println("Total Tugas Belum Selesai (Rekursif):", hitungSisaTugas(T, n))
+}
+
+func tambahTugas(T *ArrTugas, n *int) {
+	if *n >= NMAX {
+		fmt.Println("Gagal: Kapasitas penyimpanan tugas penuh.")
+	} else {
+		var baru DataTugas
+		fmt.Print("Masukkan Judul Tugas (Gunakan_Underscore_Untuk_Spasi): ")
+		fmt.Scan(&baru.judul)
+		fmt.Print("Masukkan Kategori Tugas: ")
+		fmt.Scan(&baru.kategori)
+
+		var h, b, t int
+		var valid bool = false
+
+		for valid == false {
+			fmt.Print("Masukkan Deadline (Tgl Bln Thn dipisah spasi, cth: 30 5 2026): ")
+			fmt.Scan(&h, &b, &t)
+			
+			if cekTanggal(h, b, t) {
+				valid = true
+			} else {
+				fmt.Println("Error: Tanggal tidak valid. Silakan masukkan ulang.")
+			}
+		}
+
+		baru.deadline.hari = h
+		baru.deadline.bulan = b
+		baru.deadline.tahun = t
+		baru.selesai = false
+
+		T[*n] = baru
+		*n = *n + 1
+		fmt.Println("Tugas berhasil ditambahkan.")
+		tampilTugas(*T, *n)
+	}
 }
 
 func editTugas(T *ArrTugas, n int) {
 	if n == 0 {
 		fmt.Println("Tidak ada data tugas untuk diedit.")
-		return
-	}
-	
-	var idx int
-	fmt.Print("Masukkan nomor urut tugas yang ingin diedit: ")
-	fmt.Scan(&idx)
-
-	if idx <= 0 || idx > n {
-		fmt.Println("Error: Nomor urut tidak ditemukan dalam daftar.")
-		return
-	}
-	idx = idx - 1 
-
-	fmt.Println("Atribut apa yang ingin diubah?")
-	fmt.Println("1. Tandai Selesai / Belum Selesai")
-	fmt.Println("2. Ubah Judul & Kategori")
-	
-	var pil int
-	fmt.Print("Pilihan (1-2): ")
-	fmt.Scan(&pil)
-
-	if pil == 1 {
-		T[idx].selesai = !T[idx].selesai
-		fmt.Println("Status penyelesaian tugas berhasil diperbarui.")
-	} else if pil == 2 {
-		fmt.Print("Masukkan Judul Baru: ")
-		fmt.Scan(&T[idx].judul)
-		fmt.Print("Masukkan Kategori Baru: ")
-		fmt.Scan(&T[idx].kategori)
-		fmt.Println("Data tugas berhasil diubah.")
 	} else {
-		fmt.Println("Error: Pilihan sub-menu tidak valid.")
+		tampilTugas(*T, n)
+		
+		var idx int
+		fmt.Print("Masukkan nomor urut tugas yang ingin diedit: ")
+		fmt.Scan(&idx)
+
+		if idx <= 0 || idx > n {
+			fmt.Println("Error: Nomor urut tidak ditemukan dalam daftar.")
+		} else {
+			idx = idx - 1 
+
+			fmt.Println("Atribut apa yang ingin diubah?")
+			fmt.Println("1. Tandai Selesai / Belum Selesai")
+			fmt.Println("2. Ubah Judul & Kategori")
+			
+			var pil int
+			fmt.Print("Pilihan (1-2): ")
+			fmt.Scan(&pil)
+
+			if pil == 1 {
+				T[idx].selesai = !T[idx].selesai
+				fmt.Println("Status penyelesaian tugas berhasil diperbarui.")
+			} else if pil == 2 {
+				fmt.Print("Masukkan Judul Baru: ")
+				fmt.Scan(&T[idx].judul)
+				fmt.Print("Masukkan Kategori Baru: ")
+				fmt.Scan(&T[idx].kategori)
+				fmt.Println("Data tugas berhasil diubah.")
+			} else {
+				fmt.Println("Error: Pilihan sub-menu tidak valid.")
+			}
+		}
 	}
 }
 
 func hapusTugas(T *ArrTugas, n *int) {
 	if *n == 0 {
 		fmt.Println("Tidak ada data tugas untuk dihapus.")
-		return
-	}
-	
-	var idx int
-	fmt.Print("Masukkan nomor urut tugas yang ingin dihapus: ")
-	fmt.Scan(&idx)
+	} else {
+		var idx int
+		fmt.Print("Masukkan nomor urut tugas yang ingin dihapus: ")
+		fmt.Scan(&idx)
 
-	if idx <= 0 || idx > *n {
-		fmt.Println("Error: Nomor urut tidak ditemukan dalam daftar.")
-		return
-	}
-	idx = idx - 1
+		if idx <= 0 || idx > *n {
+			fmt.Println("Error: Nomor urut tidak ditemukan dalam daftar.")
+		} else {
+			idx = idx - 1
 
-	var i int
-	for i = idx; i < *n-1; i++ {
-		T[i] = T[i+1]
+			var i int
+			for i = idx; i < *n-1; i++ {
+				T[i] = T[i+1]
+			}
+			*n = *n - 1
+			fmt.Println("Tugas berhasil dihapus secara permanen.")
+		}
 	}
-	*n = *n - 1
-	fmt.Println("Tugas berhasil dihapus secara permanen.")
 }
 
 func deadlineLebihAwal(w1, w2 Waktu) bool {
@@ -290,9 +290,9 @@ func cariDeadline(T ArrTugas, n int, h, b, t int) int {
 	return idxKetemu
 }
 
-func tampilMenu() int {
-	var pilihan int
-	fmt.Println("\n Sistem Manajemen Tugas Harian  ")
+func tampilMenu() {
+	fmt.Println("\n=====================================")
+	fmt.Println("    APLIKASI MANAJEMEN TUGAS HARIAN  ")
 	fmt.Println("=====================================")
 	fmt.Println("1. Tambah Tugas Baru")
 	fmt.Println("2. Lihat Semua Daftar Tugas")
@@ -302,82 +302,77 @@ func tampilMenu() int {
 	fmt.Println("6. Urutkan Tugas")
 	fmt.Println("7. Keluar Aplikasi")
 	fmt.Println("=====================================")
-	
 	fmt.Print("Pilih Menu (1-7): ")
-	fmt.Scan(&pilihan)
-	return pilihan
 }
 
 func menuCari(T *ArrTugas, n int) {
 	if n == 0 {
 		fmt.Println("Belum ada data tugas untuk dicari.")
-		return
-	}
-
-	var subPil int
-	fmt.Println("\n--- Sub-Menu Pencarian Data ---")
-	fmt.Println("1. Cari Berdasarkan Kategori (Sequential Search)")
-	fmt.Println("2. Cari Berdasarkan Tanggal Deadline (Binary Search)")
-	fmt.Print("Pilihan: ")
-	fmt.Scan(&subPil)
-	
-	if subPil == 1 {
-		var kataKunci string
-		fmt.Print("Masukkan Kategori yang dicari: ")
-		fmt.Scan(&kataKunci)
-		cariKategori(*T, n, kataKunci)
-	} else if subPil == 2 {
-		fmt.Println("Catatan: Data diurutkan menaik otomatis untuk Binary Search.")
-		urutDeadline(T, n, true)
-		
-		var h, b, t int
-		fmt.Print("Masukkan deadline yang dicari (Tgl Bln Thn spasi): ")
-		fmt.Scan(&h, &b, &t)
-		
-		var hasil int = cariDeadline(*T, n, h, b, t)
-		if hasil != -1 {
-			fmt.Printf("\nData ditemukan di indeks %d: %s [%s]\n", hasil+1, (*T)[hasil].judul, (*T)[hasil].kategori)
-		} else {
-			fmt.Println("Data tugas dengan tanggal tersebut tidak ditemukan.")
-		}
 	} else {
-		fmt.Println("Error: Pilihan sub-menu pencarian tidak valid.")
+		var subPil int
+		fmt.Println("\n--- Sub-Menu Pencarian Data ---")
+		fmt.Println("1. Cari Berdasarkan Kategori (Sequential Search)")
+		fmt.Println("2. Cari Berdasarkan Tanggal Deadline (Binary Search)")
+		fmt.Print("Pilihan: ")
+		fmt.Scan(&subPil)
+		
+		if subPil == 1 {
+			var kataKunci string
+			fmt.Print("Masukkan Kategori yang dicari: ")
+			fmt.Scan(&kataKunci)
+			cariKategori(*T, n, kataKunci)
+		} else if subPil == 2 {
+			fmt.Println("Catatan: Data diurutkan menaik otomatis untuk Binary Search.")
+			urutDeadline(T, n, true)
+			
+			var h, b, t int
+			fmt.Print("Masukkan deadline yang dicari (Tgl Bln Thn spasi): ")
+			fmt.Scan(&h, &b, &t)
+			
+			var hasil int = cariDeadline(*T, n, h, b, t)
+			if hasil != -1 {
+				fmt.Printf("\nData ditemukan di indeks %d: %s [%s]\n", hasil+1, (*T)[hasil].judul, (*T)[hasil].kategori)
+			} else {
+				fmt.Println("Data tugas dengan tanggal tersebut tidak ditemukan.")
+			}
+		} else {
+			fmt.Println("Error: Pilihan sub-menu pencarian tidak valid.")
+		}
 	}
 }
 
 func menuUrut(T *ArrTugas, n int) {
 	if n == 0 {
 		fmt.Println("Belum ada data tugas untuk diurutkan.")
-		return
-	}
-
-	var subPil int
-	fmt.Println("\n--- Sub-Menu Pengurutan Data ---")
-	fmt.Println("1. Urutkan Berdasar Tanggal Deadline (Insertion Sort)")
-	fmt.Println("2. Urutkan Berdasar Status Kerja (Selection Sort)")
-	fmt.Print("Pilihan Kriteria: ")
-	fmt.Scan(&subPil)
-	
-	if subPil == 1 || subPil == 2 {
-		var mode int
-		fmt.Println("\nMode Pengurutan:\n1. Ascending (Menaik)\n2. Descending (Menurun)")
-		fmt.Print("Pilihan Mode: ")
-		fmt.Scan(&mode)
-		
-		var naik bool = true
-		if mode == 2 {
-			naik = false
-		}
-
-		if subPil == 1 {
-			urutDeadline(T, n, naik)
-			tampilTugas(*T, n)
-		} else if subPil == 2 {
-			urutStatus(T, n, naik)
-			tampilTugas(*T, n)
-		}
 	} else {
-		fmt.Println("Error: Pilihan kriteria tidak valid.")
+		var subPil int
+		fmt.Println("\n--- Sub-Menu Pengurutan Data ---")
+		fmt.Println("1. Urutkan Berdasar Tanggal Deadline (Insertion Sort)")
+		fmt.Println("2. Urutkan Berdasar Status Kerja (Selection Sort)")
+		fmt.Print("Pilihan Kriteria: ")
+		fmt.Scan(&subPil)
+		
+		if subPil == 1 || subPil == 2 {
+			var mode int
+			fmt.Println("\nMode Pengurutan:\n1. Ascending (Menaik)\n2. Descending (Menurun)")
+			fmt.Print("Pilihan Mode: ")
+			fmt.Scan(&mode)
+			
+			var naik bool = true
+			if mode == 2 {
+				naik = false
+			}
+
+			if subPil == 1 {
+				urutDeadline(T, n, naik)
+				tampilTugas(*T, n)
+			} else if subPil == 2 {
+				urutStatus(T, n, naik)
+				tampilTugas(*T, n)
+			}
+		} else {
+			fmt.Println("Error: Pilihan kriteria tidak valid.")
+		}
 	}
 }
 
@@ -385,7 +380,8 @@ func main() {
 	var pilihan int = 0
 	
 	for pilihan != 7 {
-		pilihan = tampilMenu() 
+		tampilMenu()
+		fmt.Scan(&pilihan)
 
 		if pilihan == 1 {
 			tambahTugas(&daftarTugas, &jumTugas)
